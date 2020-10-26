@@ -82,7 +82,7 @@ def isVisible(player: int) -> bool:
 
     spottedByMask = pm.read_int(player + offset['netvar']['m_bSpottedByMask'])
 
-    return True if spottedByMask & (1 << localPlayerId) else False
+    return spottedByMask & (1 << localPlayerId)
 
 def getPlayerLocation(player: int) -> Vector3:
     return Vector3(
