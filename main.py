@@ -76,6 +76,12 @@ def getGlowObjectManager() -> int:
 def getPlayerGlowIndex(player: int) -> int:
     return pm.read_int(player + offset['netvar']["m_iGlowIndex"])
 
+def sameTeam(player: int) -> bool:
+    return getPlayerTeam(player) == getPlayerTeam(getLocalPlayer())
+
+def isDead(player: int) -> bool:
+    return getPlayerHealth(player) < 1 or getPlayerHealth(player) > 100
+
 def isVisible(player: int) -> bool:
     clientState = pm.read_int(engine + offset['dwClientState'])
     localPlayerId = pm.read_int(clientState + offset['dwClientState_GetLocalPlayer'])
@@ -157,11 +163,12 @@ def findClosestValidEnemy() -> bool:
     for i in range(1, 32):
         entity = getPlayer(i)
 
-        if not entity                                                  : continue
-        if not isVisible(entity)                                       : continue
-        if isDormant(entity)                                           : continue
-        if getPlayerHealth(entity) < 1 or getPlayerHealth(entity) > 100: continue
-        if getPlayerTeam(entity) == getPlayerTeam(getLocalPlayer())    : continue
+        if not entity                                                   : continue
+        if not isVisible(entity)                                        : continue
+
+        if isDormant(entity)                                            : continue
+        if isDead   (entity)                                            : continue
+        if sameTeam (entity)                                            : continue
 
         currentDistance = getPlayerLocation(getLocalPlayer()).distanceTo(getPlayerLocation(entity))
         
@@ -171,13 +178,16 @@ def findClosestValidEnemy() -> bool:
 
     return False if closestDistanceIndex == -1 else closestDistanceIndex
 
-while True:
-    if keyboard.is_pressed('end'): exit(0)
+def main():
+    while True:
+        if keyboard.is_pressed('end'): exit(0)
 
-    if keyboard.is_pressed('shift'):
-        entity = findClosestValidEnemy()
-        if entity:forceLocalPlayerAimTo(getPlayerBoneLocation(getPlayer(entity), 8))
+        if keyboard.is_pressed('shift'):
+            entity = findClosestValidEnemy()
+            if entity:forceLocalPlayerAimTo(getPlayerBoneLocation(getPlayer(entity), 8))
 
-    for i in range(1, 32):
-        entity = getPlayer(i)
-        if entity: glowPlayer(entity)
+        for i in range(1, 32):
+            entity = getPlayer(i)
+            if entity: glowPlayer(entity)
+            
+if __name__ == '__main__' : main()
