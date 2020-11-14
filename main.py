@@ -41,7 +41,7 @@ engine = pymem.process.module_from_name(
 
 """ =============================================
 ::: Offsets needed, as they always change, sorry.
-============================================ """
+============================================= """
 offset = {
     "dwClientState_GetLocalPlayer" : (0x0),
     "dwEntityList"                 : (0x0),
