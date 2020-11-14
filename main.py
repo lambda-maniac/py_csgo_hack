@@ -149,7 +149,7 @@ def glowPlayer(player: int) -> None:
     entityGlow  = getPlayerGlowIndex(player)
     glowManager = getGlowObjectManager()
 
-    if getPlayerTeam(player) == getPlayerTeam(getLocalPlayer()):
+    if sameTeam(player):
         pm.write_float(glowManager + entityGlow * 0x38 + 0x4 , float(0))
         pm.write_float(glowManager + entityGlow * 0x38 + 0x8 , float(0))
         pm.write_float(glowManager + entityGlow * 0x38 + 0xC , float(1))
