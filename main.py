@@ -1,3 +1,7 @@
+""" =====================
+::: Made by: LordZarkares
+===================== """
+
 from math import asin, atan2
 import pymem.process
 import keyboard
@@ -35,23 +39,26 @@ engine = pymem.process.module_from_name(
             "engine.dll"
 ).lpBaseOfDll
 
+""" =============================================
+::: Offsets needed, as they always change, sorry.
+============================================ """
 offset = {
-    "dwClientState_GetLocalPlayer" : (0x180),
-    "dwEntityList"                 : (0x4D5022C),
-    "dwLocalPlayer"                : (0xD3BC5C),
-    "dwClientState"                : (0x589DD4),
-    "dwClientState_ViewAngles"     : (0x4D88),
-    "dwGlowObjectManager"          : (0x5298078),
-    "m_bDormant"                   : (0xED),
+    "dwClientState_GetLocalPlayer" : (0x0),
+    "dwEntityList"                 : (0x0),
+    "dwLocalPlayer"                : (0x0),
+    "dwClientState"                : (0x0),
+    "dwClientState_ViewAngles"     : (0x0),
+    "dwGlowObjectManager"          : (0x0),
+    "m_bDormant"                   : (0x0),
 
     "netvar"               : {
-        "m_iTeamNum"       : (0xF4),
-        "m_vecOrigin"      : (0x138),
-        "m_dwBoneMatrix"   : (0x26A8),
-        "m_vecViewOffset"  : (0x108),
-        "m_iHealth"        : (0x100),
-        "m_bSpottedByMask" : (0x980),
-        "m_iGlowIndex"     : (0xA438),
+        "m_iTeamNum"       : (0x0),
+        "m_vecOrigin"      : (0x0),
+        "m_dwBoneMatrix"   : (0x0),
+        "m_vecViewOffset"  : (0x0),
+        "m_iHealth"        : (0x0),
+        "m_bSpottedByMask" : (0x0),
+        "m_iGlowIndex"     : (0x0),
     }
 }
 
@@ -155,7 +162,7 @@ def glowPlayer(player: int) -> None:
         pm.write_float(glowManager + entityGlow * 0x38 + 0x10, float(1))
         pm.write_int  (glowManager + entityGlow * 0x38 + 0x24, int  (1))
 
-def findClosestValidEnemy() -> bool:
+def findClosestValidEnemy() -> bool or int:
 
     closestDistance      = 99999999.99
     closestDistanceIndex = -1
@@ -163,14 +170,14 @@ def findClosestValidEnemy() -> bool:
     for i in range(1, 32):
         entity = getPlayer(i)
 
-        if not entity                                                   : continue
-        if not isVisible(entity)                                        : continue
+        if not entity            : continue
+        if not isVisible(entity) : continue
 
-        if isDormant(entity)                                            : continue
-        if isDead   (entity)                                            : continue
-        if sameTeam (entity)                                            : continue
+        if isDormant(entity)     : continue
+        if isDead   (entity)     : continue
+        if sameTeam (entity)     : continue
 
-        currentDistance = getPlayerLocation(getLocalPlayer()).distanceTo(getPlayerLocation(entity))
+        currentDistance = getPlayerLocation(getLocalPlayer() ).distanceTo( getPlayerLocation(entity))
         
         if  currentDistance      < closestDistance:
             closestDistance      = currentDistance
@@ -184,10 +191,12 @@ def main():
 
         if keyboard.is_pressed('shift'):
             entity = findClosestValidEnemy()
-            if entity:forceLocalPlayerAimTo(getPlayerBoneLocation(getPlayer(entity), 8))
+
+            if   entity:forceLocalPlayerAimTo(getPlayerBoneLocation(getPlayer(entity), bone = 8))
 
         for i in range(1, 32):
             entity = getPlayer(i)
-            if entity: glowPlayer(entity)
+
+            if   entity:glowPlayer(entity)
             
 if __name__ == '__main__' : main()
