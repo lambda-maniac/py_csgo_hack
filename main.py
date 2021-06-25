@@ -1,4 +1,3 @@
-from multiprocessing import Process
 from math            import asin, atan2, pi
 
 import pymem.process
