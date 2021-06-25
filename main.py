@@ -1,4 +1,4 @@
-from math            import asin, atan2, pi
+from math import asin, atan2, pi
 
 import pymem.process
 import keyboard
