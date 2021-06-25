@@ -146,7 +146,7 @@ def writeLocalPlayerViewAngles(x: float, y: float) -> None:
     pm.write_float(clientState + offset['dwClientState_ViewAngles'] + 0x0, x)
     pm.write_float(clientState + offset['dwClientState_ViewAngles'] + 0x4, y)
 
-def normalizeRecoil(oldPunch: Vector3) -> tuple[Vector3, Vector3]:
+def normalizeRecoil(oldPunch: Vector3) -> Vector3:
     localPlayer = getLocalPlayer()
     
     punchAngles = Vector3 (
