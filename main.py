@@ -1,7 +1,3 @@
-""" =====================
-::: Made by: LordZarkares
-===================== """
-
 from math import asin, atan2
 import pymem.process
 import keyboard
@@ -22,7 +18,7 @@ class Vector3:
     def __str__(self):
         return f"(x: {str(self.x)}, y: {str(self.y)}, z: {str(self.z)})"
     def __repr__(self):
-        return f"(x: {str(self.x)}, y: {str(self.y)}, z: {str(self.z)})"
+        return self.__str__()
 
     def distanceTo(self, other):
         delta = other - self; return ((delta.x ** 2) + (delta.y ** 2) + (delta.z ** 2))**(0.5)
@@ -39,34 +35,34 @@ engine = pymem.process.module_from_name(
             "engine.dll"
 ).lpBaseOfDll
 
-""" =============================================
-::: Offsets needed, as they always change, sorry.
-============================================= """
 offset = {
-    "dwClientState_GetLocalPlayer" : (0x0),
-    "dwEntityList"                 : (0x0),
-    "dwLocalPlayer"                : (0x0),
-    "dwClientState"                : (0x0),
-    "dwClientState_ViewAngles"     : (0x0),
-    "dwGlowObjectManager"          : (0x0),
-    "m_bDormant"                   : (0x0),
+    "dwClientState_GetLocalPlayer" : (0x180),
+    "dwEntityList"                 : (0x4DA215C),
+    "dwLocalPlayer"                : (0xD892CC),
+    "dwClientState"                : (0x588FEC),
+    "dwClientState_ViewAngles"     : (0x4D90),
+    "dwGlowObjectManager"          : (0x52EA5D0),
+    "m_bDormant"                   : (0xED),
 
     "netvar"               : {
-        "m_iTeamNum"       : (0x0),
-        "m_vecOrigin"      : (0x0),
-        "m_dwBoneMatrix"   : (0x0),
-        "m_vecViewOffset"  : (0x0),
-        "m_iHealth"        : (0x0),
-        "m_bSpottedByMask" : (0x0),
-        "m_iGlowIndex"     : (0x0),
+        "m_iTeamNum"       : (0xF4),
+        "m_vecOrigin"      : (0x138),
+        "m_dwBoneMatrix"   : (0x26A8),
+        "m_vecViewOffset"  : (0x108),
+        "m_iHealth"        : (0x100),
+        "m_bSpottedByMask" : (0x980),
+        "m_iGlowIndex"     : (0xA438),
     }
 }
 
 def getPlayer(index: int) -> int: 
-    return pm.read_int(client + offset["dwEntityList"] + (index * 0x10))
+    return pm.read_uint(client + offset["dwEntityList"] + (index * 0x10))
 
 def getLocalPlayer() -> int:
     return pm.read_int(client + offset['dwLocalPlayer'])
+
+def getClientState() -> int:
+    return pm.read_int(engine + offset['dwClientState'])
     
 def getPlayerTeam(player: int) -> int:
     return pm.read_int(player + offset['netvar']['m_iTeamNum'])
@@ -83,14 +79,14 @@ def getGlowObjectManager() -> int:
 def getPlayerGlowIndex(player: int) -> int:
     return pm.read_int(player + offset['netvar']["m_iGlowIndex"])
 
-def sameTeam(player: int) -> bool:
-    return getPlayerTeam(player) == getPlayerTeam(getLocalPlayer())
+def sameTeam(playerA: int, playerB: int) -> bool:
+    return getPlayerTeam(playerA) == getPlayerTeam(playerB)
 
 def isDead(player: int) -> bool:
     return getPlayerHealth(player) < 1 or getPlayerHealth(player) > 100
 
 def isVisible(player: int) -> bool:
-    clientState = pm.read_int(engine + offset['dwClientState'])
+    clientState   = getClientState()
     localPlayerId = pm.read_int(clientState + offset['dwClientState_GetLocalPlayer'])
 
     spottedByMask = pm.read_int(player + offset['netvar']['m_bSpottedByMask'])
@@ -105,7 +101,7 @@ def getPlayerLocation(player: int) -> Vector3:
     )
 
 def getPlayerBoneLocation(player: int, bone: int) -> Vector3:
-    boneMatrix = pm.read_int(player + offset['netvar']['m_dwBoneMatrix'])
+    boneMatrix = pm.read_uint(player + offset['netvar']['m_dwBoneMatrix'])
     return Vector3(
         x = pm.read_float(boneMatrix + 0x30 * bone + 0x0C),
         y = pm.read_float(boneMatrix + 0x30 * bone + 0x1C),
@@ -120,7 +116,7 @@ def getLocalPlayerViewOffset() -> Vector3:
     )
 
 def getLocalPlayerViewAngles() -> Vector3:
-    clientState = pm.read_int(engine  + offset['dwClientState']); return Vector3(
+    clientState = getClientState(); return Vector3(
         x = pm.read_float(clientState + offset['dwClientState_ViewAngles'] + 0x0),
         y = pm.read_float(clientState + offset['dwClientState_ViewAngles'] + 0x4),
         z = pm.read_float(clientState + offset['dwClientState_ViewAngles'] + 0x8),
@@ -132,7 +128,7 @@ def writeLocalPlayerViewAngles(x: float, y: float) -> None:
     if x >   89.0: x -= 180.0
     if x <  -89.0: x += 180.0
 
-    clientState = pm.read_int(engine + offset['dwClientState'])
+    clientState = getClientState()
     pm.write_float(clientState + offset['dwClientState_ViewAngles'] + 0x0, x)
     pm.write_float(clientState + offset['dwClientState_ViewAngles'] + 0x4, y)
 
@@ -149,7 +145,7 @@ def glowPlayer(player: int) -> None:
     entityGlow  = getPlayerGlowIndex(player)
     glowManager = getGlowObjectManager()
 
-    if sameTeam(player):
+    if sameTeam(player, getLocalPlayer()):
         pm.write_float(glowManager + entityGlow * 0x38 + 0x4 , float(0))
         pm.write_float(glowManager + entityGlow * 0x38 + 0x8 , float(0))
         pm.write_float(glowManager + entityGlow * 0x38 + 0xC , float(1))
@@ -173,9 +169,9 @@ def findClosestValidEnemy() -> bool or int:
         if not entity            : continue
         if not isVisible(entity) : continue
 
-        if isDormant(entity)     : continue
-        if isDead   (entity)     : continue
-        if sameTeam (entity)     : continue
+        if isDormant(entity)                   : continue
+        if isDead   (entity)                   : continue
+        if sameTeam (entity, getLocalPlayer()) : continue
 
         currentDistance = getPlayerLocation(getLocalPlayer() ).distanceTo( getPlayerLocation(entity))
         
