@@ -1,3 +1,7 @@
+"""
+::: DOESN'T WORK ANYMORE @ DEPRECATED
+"""
+
 from math import asin, atan2, pi
 
 import pymem.process
